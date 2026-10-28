@@ -39,3 +39,22 @@ Developed as a personal tool to streamline daily workflows, ensure no client is 
 1. Clone this repository:
    ```bash
    git clone https://github.com/kurtjoshuansel-byte/PLCTracker.git
+Open the PLCTracker.sln file in Visual Studio 2026 (or 2022 with .NET 10 SDK).
+
+Restore NuGet Packages (Visual Studio should do this automatically).
+
+Press F5 to build and run.
+
+📂 Where is the Data Stored?
+Because this app handles sensitive mental health information, all data is stored 100% locally on your machine. Nothing is sent to the cloud.
+
+Database location: C:\Users\<YourUsername>\AppData\Local\PLCTracker\tracker.db
+
+Tip: Use the 💾 Backup DB button in the app regularly to save copies of your data.
+
+👨‍💻 Author
+Kurt Joshua
+
+GitHub: @kurtjoshuansel-byte
+
+Built with ❤️ for the hardworking Intake Coordinators at Progressive Life Counseling.
