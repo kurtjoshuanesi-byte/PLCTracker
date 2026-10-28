@@ -1,0 +1,30 @@
+﻿<Window x:Class="PLCTracker.Views.AlarmWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="⏰ TASK ALARM!" Height="300" Width="450"
+        WindowStartupLocation="CenterScreen" 
+        Background="#1A1C23" Foreground="#E0E0E0" FontFamily="Segoe UI"
+        WindowStyle="None" AllowsTransparency="True" Topmost="True"
+        BorderBrush="#FF5C00" BorderThickness="2">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Background="#FF5C00" Padding="15,10">
+            <TextBlock x:Name="HeaderText" Text="⏰ TASK ALARM!" FontSize="18" FontWeight="Bold" Foreground="White"/>
+        </Border>
+
+        <StackPanel Grid.Row="1" Margin="20,15,20,15">
+            <TextBlock x:Name="TaskInfoText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,10"/>
+            <TextBlock x:Name="NotesText" FontSize="13" Foreground="#8B92A5" TextWrapping="Wrap" FontStyle="Italic"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,20">
+            <Button Content="Snooze 5 Mins" Click="Snooze_Click" Padding="12,8" Margin="0,0,10,0" Background="#F39C12" BorderBrush="#F39C12" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+            <Button Content="Dismiss / Done" Click="Dismiss_Click" Padding="12,8" Background="#27AE60" BorderBrush="#27AE60" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="PLC Intake Tracker" Height="750" Width="1150"
+        Icon="app.ico"
         WindowStartupLocation="CenterScreen" 
         Background="#121316" Foreground="#E0E0E0"
         FontFamily="Segoe UI">
@@ -199,7 +200,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- HEADER AREA (Import CSV naa na dinhi) -->
         <Grid Grid.Row="0" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <TextBlock Text="PLC Intake Tracker" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF"/>
@@ -291,7 +291,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- WALA NA ANG IMPORT CSV DINHI KAY NAA NA SA TAAS -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
                         <TextBlock Text="🔍 Search:" VerticalAlignment="Center" FontWeight="Bold" Foreground="#8B92A5" Margin="0,0,8,0"/>
                         <TextBox x:Name="ClientSearchBox" Width="250" TextChanged="ClientSearchBox_TextChanged" Margin="0,0,20,0"/>

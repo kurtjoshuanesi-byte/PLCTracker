@@ -26,9 +26,23 @@ public class NotificationService : IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(exitItem);
 
+        // Load custom icon safely
+        System.Drawing.Icon? customIcon = null;
+        try
+        {
+            var iconUri = new Uri("pack://application:,,,/app.ico");
+            var iconStream = System.Windows.Application.GetResourceStream(iconUri)?.Stream;
+            if (iconStream != null)
+                customIcon = new System.Drawing.Icon(iconStream);
+        }
+        catch
+        {
+            // Kung naay error sa pag-load sa app.ico, mo-fallback sa default
+        }
+
         _trayIcon = new NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = customIcon ?? System.Drawing.SystemIcons.Application,
             Visible = true,
             Text = "PLC Intake Tracker",
             ContextMenuStrip = menu
@@ -36,7 +50,6 @@ public class NotificationService : IDisposable
 
         _trayIcon.DoubleClick += (_, _) => OnOpenRequested?.Invoke();
 
-        // Mag-check siya every 1 minute kung naay task nga hapit na (10 mins before)
         _timer = new System.Windows.Threading.DispatcherTimer
         {
             Interval = TimeSpan.FromMinutes(1)
@@ -50,8 +63,6 @@ public class NotificationService : IDisposable
         try
         {
             using var db = new AppDbContext();
-
-            // KINI ANG GIKAUSAB: Mag-alarm siya kung ang task kay due na WITHIN THE NEXT 10 MINUTES
             var warningTime = DateTime.Now.AddMinutes(10);
 
             var due = db.Tasks
@@ -61,17 +72,13 @@ public class NotificationService : IDisposable
 
             foreach (var task in due)
             {
-                // I-play ang Windows Exclamation sound para madunggan
-                System.Media.SystemSounds.Exclamation.Play();
-
-                // Ipakita ang notification
-                _trayIcon.ShowBalloonTip(
-                    10000,
-                    "⏰ Task Approaching!",
-                    $"{task.TypeLabel}: {task.Client?.Name}\nDue na in 10 mins or less!\n\nNotes: {task.Notes}",
-                    ToolTipIcon.Warning);
-
                 task.IsNotified = true;
+
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var alarmWin = new Views.AlarmWindow(task);
+                    alarmWin.Show();
+                });
             }
 
             if (due.Count > 0)
