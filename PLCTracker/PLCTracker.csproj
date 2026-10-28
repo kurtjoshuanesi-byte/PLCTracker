@@ -8,6 +8,7 @@
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<NoWarn>NU1903</NoWarn>
+		<StartupObject>PLCTracker.App</StartupObject>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using PLCTracker.Data;
@@ -82,45 +83,50 @@ public partial class MainWindow : Window
     private void TaskSearchBox_TextChanged(object sender, TextChangedEventArgs e) => Refresh();
     private void ShowCompletedCheck_Changed(object sender, RoutedEventArgs e) => Refresh();
 
-    // ===== MGA BUTTON CLICKS =====
-    private void CompleteTask_Click(object sender, RoutedEventArgs e)
+    private void CompleteTask_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is Button btn && btn.Tag is TaskItem taskItem)
         {
             using var db = new AppDbContext();
             var task = db.Tasks.Find(taskItem.Id);
-            if (task == null) return;
-
-            task.IsCompleted = !task.IsCompleted;
-            task.CompletedAt = task.IsCompleted ? DateTime.Now : null;
-            db.SaveChanges();
-            Refresh();
+            if (task != null)
+            {
+                task.IsCompleted = !task.IsCompleted;
+                task.CompletedAt = task.IsCompleted ? DateTime.Now : null;
+                db.SaveChanges();
+                Refresh();
+            }
+            e.Handled = true;
         }
     }
 
-    private void EditTask_Click(object sender, RoutedEventArgs e)
+    private void EditTask_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is Button btn && btn.Tag is TaskItem taskItem)
         {
             using var db = new AppDbContext();
             var task = db.Tasks.Find(taskItem.Id);
-            if (task == null) return;
-
-            var dlg = new TaskDialog(task) { Owner = this };
-            if (dlg.ShowDialog() == true) Refresh();
+            if (task != null)
+            {
+                var dlg = new TaskDialog(task) { Owner = this };
+                if (dlg.ShowDialog() == true) Refresh();
+            }
+            e.Handled = true;
         }
     }
 
-    private void DeleteTask_Click(object sender, RoutedEventArgs e)
+    private void DeleteTask_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is Button btn && btn.Tag is TaskItem taskItem)
         {
-            if (MessageBox.Show("Delete this task?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
-
-            using var db = new AppDbContext();
-            var task = db.Tasks.Find(taskItem.Id);
-            if (task != null) { db.Tasks.Remove(task); db.SaveChanges(); }
-            Refresh();
+            if (MessageBox.Show("Delete this task?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                using var db = new AppDbContext();
+                var task = db.Tasks.Find(taskItem.Id);
+                if (task != null) { db.Tasks.Remove(task); db.SaveChanges(); }
+                Refresh();
+            }
+            e.Handled = true;
         }
     }
 
@@ -172,43 +178,94 @@ public partial class MainWindow : Window
 
     private void ClientSearchBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshClients();
 
-    private void EditClient_Click(object sender, RoutedEventArgs e)
+    private void EditClient_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is Button btn && btn.Tag is Client clientItem)
         {
             using var db = new AppDbContext();
             var client = db.Clients.Find(clientItem.Id);
-            if (client == null) return;
-
-            var dlg = new ClientDialog(client) { Owner = this };
-            if (dlg.ShowDialog() == true) { Refresh(); RefreshClients(); }
+            if (client != null)
+            {
+                var dlg = new ClientDialog(client) { Owner = this };
+                if (dlg.ShowDialog() == true) { Refresh(); RefreshClients(); }
+            }
+            e.Handled = true;
         }
     }
 
-    private void DeleteClient_Click(object sender, RoutedEventArgs e)
+    private void DeleteClient_Click(object sender, MouseButtonEventArgs e)
     {
         if (sender is Button btn && btn.Tag is Client clientItem)
         {
             using var db = new AppDbContext();
             var client = db.Clients.Include(c => c.Tasks).FirstOrDefault(c => c.Id == clientItem.Id);
-            if (client == null) return;
-
-            var msg = client.Tasks.Count > 0 ? $"Delete '{client.Name}' and {client.Tasks.Count} task(s)?" : $"Delete '{client.Name}'?";
-            if (MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
-
-            db.Tasks.RemoveRange(client.Tasks);
-            db.Clients.Remove(client);
-            db.SaveChanges();
-            Refresh(); RefreshClients();
+            if (client != null)
+            {
+                var msg = client.Tasks.Count > 0 ? $"Delete '{client.Name}' and {client.Tasks.Count} task(s)?" : $"Delete '{client.Name}'?";
+                if (MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    db.Tasks.RemoveRange(client.Tasks);
+                    db.Clients.Remove(client);
+                    db.SaveChanges();
+                    Refresh(); RefreshClients();
+                }
+            }
+            e.Handled = true;
         }
     }
 
-    private void ClientGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void ClientGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (ClientGrid.SelectedItem is Client client)
         {
             var dlg = new ClientHistoryDialog(client) { Owner = this };
             dlg.ShowDialog();
+        }
+    }
+
+    private void CallClient_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is Client clientItem)
+        {
+            if (string.IsNullOrWhiteSpace(clientItem.Phone))
+            {
+                MessageBox.Show("Walay phone number kining clienta.", "No Phone", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            else
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"tel:{clientItem.Phone}") { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error calling: {ex.Message}");
+                }
+            }
+            e.Handled = true;
+        }
+    }
+
+    private void EmailClient_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is Client clientItem)
+        {
+            if (string.IsNullOrWhiteSpace(clientItem.Email))
+            {
+                MessageBox.Show("Walay email kining clienta.", "No Email", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            else
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"mailto:{clientItem.Email}") { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error opening email: {ex.Message}");
+                }
+            }
+            e.Handled = true;
         }
     }
 
@@ -229,6 +286,7 @@ public partial class MainWindow : Window
         var dlg = new DailyAgendaDialog { Owner = this };
         dlg.ShowDialog();
     }
+
 
     private string GetDbPath()
     {

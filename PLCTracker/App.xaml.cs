@@ -1,14 +1,8 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
 
-namespace PLCTracker
+namespace PLCTracker;
+
+public partial class App : Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
-    {
-    }
-
+    // Wala nay custom OnStartup. Ang App.xaml na ang bahala mo-open sa MainWindow diretso.
 }

@@ -199,6 +199,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- HEADER AREA -->
         <Grid Grid.Row="0" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <TextBlock Text="PLC Intake Tracker" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF"/>
@@ -258,7 +259,6 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <!-- GITANGGANG ANG DUPLICATE NGA STYLE ATTRIBUTE DINHI -->
                                             <Button Tag="{Binding}" PreviewMouseLeftButtonDown="CompleteTask_Click">
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
@@ -306,10 +306,12 @@
                             <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="180"/>
                             <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>
 
-                            <DataGridTemplateColumn Header="Action" Width="90">
+                            <DataGridTemplateColumn Header="Action" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
+                                            <Button Tag="{Binding}" Content="📞" ToolTip="Call Client" Background="#2ECC71" PreviewMouseLeftButtonDown="CallClient_Click" Style="{StaticResource ActionButton}"/>
+                                            <Button Tag="{Binding}" Content="✉️" ToolTip="Email Client" Background="#F39C12" PreviewMouseLeftButtonDown="EmailClient_Click" Style="{StaticResource ActionButton}"/>
                                             <Button Tag="{Binding}" Content="✏️" Background="#2980B9" PreviewMouseLeftButtonDown="EditClient_Click" Style="{StaticResource ActionButton}"/>
                                             <Button Tag="{Binding}" Content="🗑️" Background="#C0392B" PreviewMouseLeftButtonDown="DeleteClient_Click" Style="{StaticResource ActionButton}"/>
                                         </StackPanel>
