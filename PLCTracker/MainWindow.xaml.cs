@@ -1,6 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.IO;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -287,6 +287,79 @@ public partial class MainWindow : Window
         dlg.ShowDialog();
     }
 
+    // ===== IMPORT FROM CSV =====
+    private void ImportCsv_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog
+        {
+            Filter = "CSV Files (*.csv)|*.csv",
+            Title = "Select CSV file to import clients"
+        };
+
+        if (ofd.ShowDialog() != true) return;
+
+        try
+        {
+            int importedCount = 0;
+            using var db = new AppDbContext();
+
+            using var parser = new Microsoft.VisualBasic.FileIO.TextFieldParser(ofd.FileName);
+            parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
+            parser.SetDelimiters(",");
+
+            // Skip header row
+            if (!parser.EndOfData)
+            {
+                parser.ReadFields();
+            }
+
+            while (!parser.EndOfData)
+            {
+                string[]? fields = parser.ReadFields();
+                if (fields == null || fields.Length < 1) continue;
+
+                string name = fields[0].Trim();
+                if (string.IsNullOrWhiteSpace(name)) continue;
+
+                string phone = fields.Length > 1 ? fields[1].Trim() : "";
+                string email = fields.Length > 2 ? fields[2].Trim() : "";
+                string notes = fields.Length > 3 ? fields[3].Trim() : "";
+
+                ClientStatus status = ClientStatus.Pending;
+                if (fields.Length > 4 && Enum.TryParse<ClientStatus>(fields[4].Trim(), true, out var parsedStatus))
+                {
+                    status = parsedStatus;
+                }
+
+                if (db.Clients.Any(c => c.Name.ToLower() == name.ToLower())) continue;
+
+                db.Clients.Add(new Client
+                {
+                    Name = name,
+                    Phone = phone,
+                    Email = email,
+                    Notes = notes,
+                    Status = status
+                });
+                importedCount++;
+            }
+
+            if (importedCount > 0)
+            {
+                db.SaveChanges();
+                MessageBox.Show($"Successfully imported {importedCount} clients!", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                RefreshClients();
+            }
+            else
+            {
+                MessageBox.Show("No new clients found to import. Check your CSV format or duplicate names.", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error importing CSV: {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     private string GetDbPath()
     {
@@ -339,36 +412,6 @@ public partial class MainWindow : Window
                 MessageBox.Show($"Restore failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-    }
-
-    private void ExportCsv_Click(object sender, RoutedEventArgs e)
-    {
-        var sfd = new SaveFileDialog
-        {
-            Filter = "CSV Files (*.csv)|*.csv",
-            FileName = $"PLCTracker_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv"
-        };
-
-        if (sfd.ShowDialog() != true) return;
-
-        using var db = new AppDbContext();
-        var tasks = db.Tasks.Include(t => t.Client).OrderBy(t => t.DueDate).ToList();
-
-        var csv = new StringBuilder();
-        csv.AppendLine("Client Name,Phone,Task Type,Due Date,Status,Notes");
-
-        foreach (var t in tasks)
-        {
-            var notes = $"\"{t.Notes.Replace("\"", "\"\"")}\"";
-            var clientName = $"\"{t.Client?.Name}\"";
-            var phone = t.Client?.Phone ?? "";
-            var type = t.TypeLabel.Replace("📞 ", "").Replace("🔁 ", "").Replace("📋 ", "").Replace("📌 ", "");
-
-            csv.AppendLine($"{clientName},{phone},{type},{t.DueDate:yyyy-MM-dd HH:mm},{t.StatusLabel},{notes}");
-        }
-
-        File.WriteAllText(sfd.FileName, csv.ToString(), Encoding.UTF8);
-        MessageBox.Show("Export successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void AutoStart_Click(object sender, RoutedEventArgs e)

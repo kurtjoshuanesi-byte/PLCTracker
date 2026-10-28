@@ -199,7 +199,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- HEADER AREA -->
+        <!-- HEADER AREA (Import CSV naa na dinhi) -->
         <Grid Grid.Row="0" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <TextBlock Text="PLC Intake Tracker" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF"/>
@@ -208,9 +208,9 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Button Content="🌅 Daily Agenda" Click="ShowAgenda_Click" Margin="0,0,8,0" Background="#F39C12" BorderBrush="#F39C12" Foreground="White"/>
+                <Button Content="📥 Import CSV" Click="ImportCsv_Click" Margin="0,0,8,0" Background="#8E44AD" BorderBrush="#8E44AD" Foreground="White"/>
                 <Button Content="💾 Backup DB" Click="BackupDb_Click" Margin="0,0,8,0"/>
                 <Button Content="📥 Restore DB" Click="RestoreDb_Click" Margin="0,0,8,0"/>
-                <Button Content="📁 Export CSV" Click="ExportCsv_Click" Margin="0,0,8,0"/>
                 <Button Content="🚀 Auto-Start" Click="AutoStart_Click"/>
             </StackPanel>
         </Grid>
@@ -291,6 +291,7 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
+                    <!-- WALA NA ANG IMPORT CSV DINHI KAY NAA NA SA TAAS -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
                         <TextBlock Text="🔍 Search:" VerticalAlignment="Center" FontWeight="Bold" Foreground="#8B92A5" Margin="0,0,8,0"/>
                         <TextBox x:Name="ClientSearchBox" Width="250" TextChanged="ClientSearchBox_TextChanged" Margin="0,0,20,0"/>
