@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using Microsoft.EntityFrameworkCore;
 using PLCTracker.Data;
 using PLCTracker.Models;
 
@@ -17,11 +16,11 @@ public partial class ClientHistoryDialog : Window
     private void LoadHistory(int clientId)
     {
         using var db = new AppDbContext();
-        var tasks = db.Tasks
-            .Where(t => t.ClientId == clientId)
-            .OrderByDescending(t => t.DueDate)
+        var logs = db.AuditLogs
+            .Where(l => l.ClientId == clientId)
+            .OrderByDescending(l => l.Timestamp)
             .ToList();
 
-        HistoryGrid.ItemsSource = tasks;
+        HistoryGrid.ItemsSource = logs;
     }
 }

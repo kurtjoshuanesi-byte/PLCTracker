@@ -37,7 +37,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             using var db = new AppDbContext();
             var tomorrow = DateTime.Today.AddDays(1);
-            var hasUrgentTasks = db.Tasks.Any(t => !t.IsCompleted && t.DueDate < tomorrow);
+            var hasUrgentTasks = db.Tasks.Any(t => !t.IsCompleted && !t.IsDeleted && t.DueDate < tomorrow);
 
             if (hasUrgentTasks)
             {
@@ -47,7 +47,21 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         };
     }
 
-    // ===== NAVIGATION LOGIC =====
+    // ===== HELPER: LOG ACTION (Giusab ngadto sa static) =====
+    private static void LogAction(int clientId, string action, string details)
+    {
+        using var db = new AppDbContext();
+        db.AuditLogs.Add(new AuditLog
+        {
+            ClientId = clientId,
+            Action = action,
+            Details = details,
+            Timestamp = DateTime.Now
+        });
+        db.SaveChanges();
+    }
+
+    // ===== NAVIGATION =====
     private void BtnTasks_Click(object sender, RoutedEventArgs e)
     {
         TasksPanel.Visibility = Visibility.Visible;
@@ -62,11 +76,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         RefreshClients();
     }
 
-    // ===== TASKS LOGIC =====
+    // ===== TASKS =====
     private void Refresh()
     {
         using var db = new AppDbContext();
-        var query = db.Tasks.Include(t => t.Client).AsQueryable();
+        var query = db.Tasks.Include(t => t.Client).Where(t => !t.IsDeleted).AsQueryable();
 
         if (ShowCompletedCheck.IsChecked is not true)
             query = query.Where(t => !t.IsCompleted);
@@ -82,7 +96,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         var tasks = query.OrderBy(t => t.IsCompleted).ThenBy(t => t.DueDate).ToList();
         TaskGrid.ItemsSource = tasks;
 
-        var allTasks = db.Tasks.ToList();
+        var allTasks = db.Tasks.Where(t => !t.IsDeleted).ToList();
         var overdue = allTasks.Count(t => !t.IsCompleted && t.DueDate < DateTime.Now);
         var today = allTasks.Count(t => !t.IsCompleted && t.DueDate.Date == DateTime.Today && t.DueDate >= DateTime.Now);
         var completed = allTasks.Count(t => t.IsCompleted);
@@ -103,6 +117,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 task.IsCompleted = !task.IsCompleted;
                 task.CompletedAt = task.IsCompleted ? DateTime.Now : null;
                 db.SaveChanges();
+                LogAction(task.ClientId, task.IsCompleted ? "Task Completed" : "Task Reopened", $"Task: {task.TypeLabel} - {task.Notes}");
                 Refresh();
             }
             e.Handled = true;
@@ -118,7 +133,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             if (task is not null)
             {
                 var dlg = new TaskDialog(task) { Owner = this };
-                if (dlg.ShowDialog() is true) Refresh();
+                if (dlg.ShowDialog() is true)
+                {
+                    LogAction(task.ClientId, "Task Edited", $"Updated Task: {task.TypeLabel}");
+                    Refresh();
+                }
             }
             e.Handled = true;
         }
@@ -132,46 +151,23 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             {
                 using var db = new AppDbContext();
                 var task = db.Tasks.Find(taskItem.Id);
-                if (task is not null) { db.Tasks.Remove(task); db.SaveChanges(); }
+                if (task is not null)
+                {
+                    task.IsDeleted = true;
+                    db.SaveChanges();
+                    LogAction(task.ClientId, "Task Deleted", $"Deleted Task: {task.TypeLabel}");
+                }
                 Refresh();
             }
             e.Handled = true;
         }
     }
 
-    private void CopyPhone_Click(object sender, RoutedEventArgs e)
-    {
-        if (TaskGrid.SelectedItem is TaskItem task && task.Client is not null)
-        {
-            Clipboard.SetText(task.Client.Phone);
-            System.Windows.MessageBox.Show($"Copied: {task.Client.Phone}", "Copied", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-        else System.Windows.MessageBox.Show("Pilia una ang task.");
-    }
-
-    private void Snooze15_Click(object sender, RoutedEventArgs e) => SnoozeTask(15);
-    private void Snooze1H_Click(object sender, RoutedEventArgs e) => SnoozeTask(60);
-
-    private void SnoozeTask(int minutes)
-    {
-        if (TaskGrid.SelectedItem is not TaskItem task) return;
-        using var db = new AppDbContext();
-        var dbTask = db.Tasks.Find(task.Id);
-        if (dbTask is not null)
-        {
-            dbTask.DueDate = DateTime.Now.AddMinutes(minutes);
-            dbTask.IsNotified = false;
-            db.SaveChanges();
-            Refresh();
-            System.Windows.MessageBox.Show($"Task snoozed for {minutes} minutes.", "Snoozed");
-        }
-    }
-
-    // ===== CLIENTS LOGIC =====
+    // ===== CLIENTS =====
     private void RefreshClients()
     {
         using var db = new AppDbContext();
-        var query = db.Clients.AsQueryable();
+        var query = db.Clients.Where(c => !c.IsDeleted).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(ClientSearchBox.Text))
         {
@@ -197,7 +193,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             if (client is not null)
             {
                 var dlg = new ClientDialog(client) { Owner = this };
-                if (dlg.ShowDialog() is true) { Refresh(); RefreshClients(); }
+                if (dlg.ShowDialog() is true)
+                {
+                    LogAction(client.Id, "Client Profile Updated", $"Status: {client.Status}");
+                    Refresh(); RefreshClients();
+                }
             }
             e.Handled = true;
         }
@@ -211,16 +211,72 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             var client = db.Clients.Include(c => c.Tasks).FirstOrDefault(c => c.Id == clientItem.Id);
             if (client is not null)
             {
-                var msg = client.Tasks.Count > 0 ? $"Delete '{client.Name}' and {client.Tasks.Count} task(s)?" : $"Delete '{client.Name}'?";
+                var msg = $"Delete '{client.Name}' and {client.Tasks.Count} task(s)?";
                 if (System.Windows.MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
-                    db.Tasks.RemoveRange(client.Tasks);
-                    db.Clients.Remove(client);
+                    client.IsDeleted = true;
+                    foreach (var t in client.Tasks) t.IsDeleted = true;
                     db.SaveChanges();
+
+                    LogAction(client.Id, "Client Deleted", "Client moved to archive.");
                     Refresh(); RefreshClients();
                 }
             }
             e.Handled = true;
+        }
+    }
+
+    private void AddClient_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new ClientDialog { Owner = this };
+        if (dlg.ShowDialog() is true)
+        {
+            LogAction(dlg.SavedClientId, "Client Added", "New client registered.");
+            Refresh(); RefreshClients();
+            BtnClients_Click(this, new RoutedEventArgs());
+        }
+    }
+
+    private void AddTask_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new TaskDialog() { Owner = this };
+        if (dlg.ShowDialog() is true)
+        {
+            using var db = new AppDbContext();
+            var newTask = db.Tasks.Find(dlg.SavedTaskId);
+            if (newTask is not null) LogAction(newTask.ClientId, "Task Created", $"Type: {newTask.TypeLabel}");
+
+            Refresh();
+            BtnTasks_Click(this, new RoutedEventArgs());
+        }
+    }
+
+    // ===== MGA LAING METHODS =====
+    private void CopyPhone_Click(object sender, RoutedEventArgs e)
+    {
+        if (TaskGrid.SelectedItem is TaskItem task && task.Client is not null)
+        {
+            Clipboard.SetText(task.Client.Phone);
+            System.Windows.MessageBox.Show($"Copied: {task.Client.Phone}", "Copied", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        else System.Windows.MessageBox.Show("Pilia una ang task.");
+    }
+
+    private void Snooze15_Click(object sender, RoutedEventArgs e) => SnoozeTask(15);
+    private void Snooze1H_Click(object sender, RoutedEventArgs e) => SnoozeTask(60);
+
+    private void SnoozeTask(int minutes)
+    {
+        if (TaskGrid.SelectedItem is not TaskItem task) return;
+        using var db = new AppDbContext();
+        var dbTask = db.Tasks.Find(task.Id);
+        if (dbTask is not null)
+        {
+            dbTask.DueDate = DateTime.Now.AddMinutes(minutes);
+            dbTask.IsNotified = false;
+            db.SaveChanges();
+            LogAction(dbTask.ClientId, "Task Snoozed", $"Snoozed for {minutes} mins");
+            Refresh();
         }
     }
 
@@ -235,56 +291,21 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void CallClient_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem && !string.IsNullOrWhiteSpace(clientItem.Phone))
         {
-            if (string.IsNullOrWhiteSpace(clientItem.Phone))
-            {
-                System.Windows.MessageBox.Show("Walay phone number kining clienta.", "No Phone", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            else
-            {
-                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"tel:{clientItem.Phone}") { UseShellExecute = true }); }
-                catch (Exception ex) { System.Windows.MessageBox.Show($"Error calling: {ex.Message}"); }
-            }
-            e.Handled = true;
+            LogAction(clientItem.Id, "Called Client", $"Dialed: {clientItem.Phone}");
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"tel:{clientItem.Phone}") { UseShellExecute = true }); }
+            catch (Exception ex) { System.Windows.MessageBox.Show($"Error calling: {ex.Message}"); }
         }
     }
 
     private void EmailClient_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem && !string.IsNullOrWhiteSpace(clientItem.Email))
         {
-            if (string.IsNullOrWhiteSpace(clientItem.Email))
-            {
-                System.Windows.MessageBox.Show("Walay email kining clienta.", "No Email", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            else
-            {
-                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"mailto:{clientItem.Email}") { UseShellExecute = true }); }
-                catch (Exception ex) { System.Windows.MessageBox.Show($"Error opening email: {ex.Message}"); }
-            }
-            e.Handled = true;
-        }
-    }
-
-    private void AddClient_Click(object sender, RoutedEventArgs e)
-    {
-        var dlg = new ClientDialog { Owner = this };
-        if (dlg.ShowDialog() is true)
-        {
-            Refresh();
-            RefreshClients();
-            BtnClients_Click(this, new RoutedEventArgs());
-        }
-    }
-
-    private void AddTask_Click(object sender, RoutedEventArgs e)
-    {
-        var dlg = new TaskDialog() { Owner = this };
-        if (dlg.ShowDialog() is true)
-        {
-            Refresh();
-            BtnTasks_Click(this, new RoutedEventArgs());
+            LogAction(clientItem.Id, "Emailed Client", $"To: {clientItem.Email}");
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"mailto:{clientItem.Email}") { UseShellExecute = true }); }
+            catch (Exception ex) { System.Windows.MessageBox.Show($"Error emailing: {ex.Message}"); }
         }
     }
 
@@ -319,9 +340,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 if (fields.Length > 4 && Enum.TryParse<ClientStatus>(fields[4].Trim(), true, out var parsedStatus))
                     status = parsedStatus;
 
-                if (db.Clients.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) continue;
+                if (db.Clients.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && !c.IsDeleted)) continue;
 
-                db.Clients.Add(new Client { Name = name, Phone = phone, Email = email, Notes = notes, Status = status });
+                var newClient = new Client { Name = name, Phone = phone, Email = email, Notes = notes, Status = status };
+                db.Clients.Add(newClient);
                 importedCount++;
             }
 

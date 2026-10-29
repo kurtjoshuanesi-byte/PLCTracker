@@ -7,6 +7,7 @@ namespace PLCTracker.Views;
 public partial class ClientDialog : Window
 {
     private readonly int? _clientId = null;
+    public int SavedClientId { get; private set; }
 
     public ClientDialog()
     {
@@ -37,14 +38,17 @@ public partial class ClientDialog : Window
 
         if (_clientId is null)
         {
-            db.Clients.Add(new Client
+            var newClient = new Client
             {
                 Name = NameBox.Text.Trim(),
                 Phone = PhoneBox.Text.Trim(),
                 Email = EmailBox.Text.Trim(),
                 Notes = NotesBox.Text.Trim(),
                 Status = (ClientStatus)StatusCombo.SelectedIndex
-            });
+            };
+            db.Clients.Add(newClient);
+            db.SaveChanges();
+            SavedClientId = newClient.Id;
         }
         else
         {
@@ -56,10 +60,11 @@ public partial class ClientDialog : Window
                 client.Email = EmailBox.Text.Trim();
                 client.Notes = NotesBox.Text.Trim();
                 client.Status = (ClientStatus)StatusCombo.SelectedIndex;
+                db.SaveChanges();
+                SavedClientId = client.Id;
             }
         }
 
-        db.SaveChanges();
         DialogResult = true;
         Close();
     }

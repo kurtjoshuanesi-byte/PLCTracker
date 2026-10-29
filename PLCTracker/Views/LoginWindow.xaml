@@ -1,0 +1,32 @@
+﻿<ui:FluentWindow x:Class="PLCTracker.Views.LoginWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 Title="Unlock PLC Tracker" Height="400" Width="400"
+                 WindowStartupLocation="CenterScreen" 
+                 ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0" Title="Secure Login" ShowMaximize="False" ShowMinimize="False" />
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="250">
+            <ui:SymbolIcon Symbol="LockClosed24" FontSize="40" Foreground="#A78BFA" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Enter 4-Digit PIN" FontSize="14" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+            <!-- Gigamit ang PasswordBox imbes TextBox -->
+            <ui:PasswordBox x:Name="PinBox" FontSize="24" MaxLength="4" KeyDown="PinBox_KeyDown" Margin="0,0,0,15"/>
+
+            <ui:Button Content="UNLOCK" Click="Unlock_Click" Appearance="Primary" HorizontalAlignment="Stretch" Height="40" FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <ui:Button Content="Forgot PIN?" Click="ForgotPin_Click" Appearance="Transparent" HorizontalAlignment="Center" FontSize="12"/>
+
+            <TextBlock x:Name="ErrorText" Foreground="#EF4444" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,15,0,0"/>
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

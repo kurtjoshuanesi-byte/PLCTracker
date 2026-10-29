@@ -8,6 +8,7 @@ namespace PLCTracker.Views;
 public partial class TaskDialog : Window
 {
     private readonly int? _taskId = null;
+    public int SavedTaskId { get; private set; } // BAG-O
 
     public TaskDialog() : this(TaskType.Custom, DateTime.Now.AddHours(1), "") { }
 
@@ -40,7 +41,7 @@ public partial class TaskDialog : Window
     private void LoadClients()
     {
         using var db = new AppDbContext();
-        ClientCombo.ItemsSource = db.Clients.OrderBy(c => c.Name).ToList();
+        ClientCombo.ItemsSource = db.Clients.Where(c => !c.IsDeleted).OrderBy(c => c.Name).ToList();
         if (ClientCombo.Items.Count > 0 && _taskId is null) ClientCombo.SelectedIndex = 0;
     }
 
@@ -52,7 +53,6 @@ public partial class TaskDialog : Window
             return;
         }
 
-        // KINI ANG PINAKA-MODERNO NGA NULL CHECK
         if (DueDatePicker.SelectedDate is not DateTime selectedDate)
         {
             MessageBox.Show("Pili og date.");
@@ -65,18 +65,21 @@ public partial class TaskDialog : Window
             return;
         }
 
-        var due = selectedDate.Date + time; // Gigamit na ang selectedDate
+        var due = selectedDate.Date + time;
         using var db = new AppDbContext();
 
         if (_taskId is null)
         {
-            db.Tasks.Add(new TaskItem
+            var newTask = new TaskItem
             {
                 ClientId = client.Id,
                 Type = (TaskType)TypeCombo.SelectedIndex,
                 DueDate = due,
                 Notes = NotesBox.Text.Trim()
-            });
+            };
+            db.Tasks.Add(newTask);
+            db.SaveChanges();
+            SavedTaskId = newTask.Id;
         }
         else
         {
@@ -88,10 +91,11 @@ public partial class TaskDialog : Window
                 task.DueDate = due;
                 task.Notes = NotesBox.Text.Trim();
                 task.IsNotified = false;
+                db.SaveChanges();
+                SavedTaskId = task.Id;
             }
         }
 
-        db.SaveChanges();
         DialogResult = true;
         Close();
     }

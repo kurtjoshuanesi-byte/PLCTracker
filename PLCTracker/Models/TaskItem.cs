@@ -17,6 +17,7 @@ public class TaskItem
     public DateTime DueDate { get; set; }
     public string Notes { get; set; } = "";
     public bool IsCompleted { get; set; }
+    public bool IsDeleted { get; set; } = false; // Audit-safe deletion
     public bool IsNotified { get; set; }
     public DateTime? CompletedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;

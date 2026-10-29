@@ -1,22 +1,26 @@
 ﻿<Window x:Class="PLCTracker.Views.ClientHistoryDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Client History" Height="500" Width="800" WindowStartupLocation="CenterOwner">
-    <Grid Margin="15">
+        Title="Client History" Height="600" Width="850" WindowStartupLocation="CenterOwner"
+        Background="#0F111A" Foreground="#E2E8F0" FontFamily="Segoe UI">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="HeaderText" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,10"/>
+        <TextBlock x:Name="HeaderText" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,15"/>
 
-        <DataGrid Grid.Row="1" x:Name="HistoryGrid" AutoGenerateColumns="False"
-                  IsReadOnly="True" CanUserAddRows="False" RowHeight="30">
+        <TextBlock Grid.Row="1" Text="📋 Audit Timeline (Full History)" FontSize="16" FontWeight="SemiBold" Foreground="#A78BFA" Margin="0,0,0,10"/>
+
+        <DataGrid Grid.Row="2" x:Name="HistoryGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                  Background="#1A1D27" RowBackground="#1A1D27" AlternatingRowBackground="#15171B" 
+                  Foreground="#E0E0E0" BorderBrush="#2D3748" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#2D3748">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Status" Binding="{Binding StatusLabel}" Width="100"/>
-                <DataGridTextColumn Header="Type" Binding="{Binding TypeLabel}" Width="130"/>
-                <DataGridTextColumn Header="Due Date" Binding="{Binding DueDate, StringFormat='MMM dd, yyyy hh:mm tt'}" Width="160"/>
-                <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>
+                <DataGridTextColumn Header="Date &amp; Time" Binding="{Binding Timestamp, StringFormat='MMM dd, yyyy hh:mm tt'}" Width="160"/>
+                <DataGridTextColumn Header="Action" Binding="{Binding Action}" Width="150"/>
+                <DataGridTextColumn Header="Details" Binding="{Binding Details}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

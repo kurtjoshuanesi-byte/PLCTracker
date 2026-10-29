@@ -16,6 +16,9 @@ public class Client
     public string Email { get; set; } = "";
     public string Notes { get; set; } = "";
     public ClientStatus Status { get; set; } = ClientStatus.Pending;
+    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public List<TaskItem> Tasks { get; set; } = new();
+
+    // Giusab ngadto sa [] para mawala ang IDE0028 warning
+    public List<TaskItem> Tasks { get; set; } = [];
 }
