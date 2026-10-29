@@ -122,7 +122,7 @@
             padding: 30px;
             border-radius: 12px;
             border: 1px solid #2D3748;
-            transition: transform 0.2s;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
         .card:hover {
@@ -157,6 +157,15 @@
             font-size: 14px;
         }
 
+        footer a {
+            color: #7B61FF;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
         /* MOBILE RESPONSIVE */
         @media (max-width: 768px) {
             .hero h1 { font-size: 36px; }
@@ -176,12 +185,11 @@
 
     <section class="hero">
         <div class="container">
-            <h1>Streamline Your <span>Mental Health Intake</span> Workflow</h1>
+            <h1>Streamline Your <span>Healthcare Intake</span> Workflow</h1>
             <p>A secure, offline-first Windows desktop application designed to manage client follow-ups, callbacks, audit trails, and onboarding schedules efficiently.</p>
             
-            <!-- KINI ANG DOWNLOAD BUTTON -->
-            <!-- Ang link kay mo-deretso sa imong pinaka-latest nga Release -->
-            <a href="https://github.com/kurtjoshuanesi-byte/PLCTracker/releases/tag/v1.0.0" class="btn-download">
+            <!-- DOWNLOAD BUTTON -->
+            <a href="https://github.com/kurtjoshuanesi-byte/PLCTracker/releases" class="btn-download">
                 📥 Download for Windows
             </a>
             <span class="version-tag">Latest Release (v1.0.0) - 100% Free</span>
@@ -204,18 +212,28 @@
                 </div>
 
                 <div class="card">
-                    <h3><span>⏰</span> Smart Alarms</h3>
-                    <p>Never miss a callback again. Custom pop-up alarms trigger 10 minutes before a task is due.</p>
+                    <h3><span>📊</span> Analytics Dashboard</h3>
+                    <p>Monitor your daily performance with real-time stats on Active Clients, Scheduled Tasks, Overdue items, and Completed tasks.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>🔄</span> Intake Pipeline</h3>
+                    <p>Track clients through their complete lifecycle: New Referral, Screening, Scheduled, Completed, Missed, and Closed.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>🔊</span> Custom Alarms</h3>
+                    <p>Never miss a callback. Set your own custom sound file to play 10 minutes before a task is due.</p>
                 </div>
 
                 <div class="card">
                     <h3><span>🖨️</span> Print & Export</h3>
-                    <p>Generate printable daily call sheets or export your task data to CSV for Excel reporting.</p>
+                    <p>Generate printable daily call sheets for your desk or export your task data directly to CSV for Excel reporting.</p>
                 </div>
 
                 <div class="card">
-                    <h3><span>👥</span> Intake Pipeline</h3>
-                    <p>Track clients through every stage: New Referral, Screening, Scheduled, Completed, Missed, or Closed.</p>
+                    <h3><span>📞</span> Quick Contact</h3>
+                    <p>Direct "Dial" and "Email" buttons that open your default calling and mailing apps instantly.</p>
                 </div>
 
                 <div class="card">
@@ -229,9 +247,9 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 Kaiko. Built with ❤️</p>
+            <p>© 2026 Kurt Joshua. Built with ❤️</p>
             <p style="margin-top: 10px;">
-                <a href="https://github.com/kurtjoshuanesi-byte/PLCTracker" style="color: #7B61FF; text-decoration: none;">View Source Code on GitHub</a>
+                <a href="https://github.com/kurtjoshuanesi-byte/PLCTracker" target="_blank">View Source Code on GitHub</a>
             </p>
         </div>
     </footer>
