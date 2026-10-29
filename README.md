@@ -67,7 +67,7 @@ Because this app handles sensitive mental health information, **all data is stor
 👤 Author
 Kurt Joshua
 
-GitHub: @kurtjoshuansel-byte
+GitHub: **([@kurtjoshuansel-byte](https://github.com/kurtjoshuanesi-byte)**
 
 Built with ❤️
    
