@@ -45,6 +45,9 @@
                     <ui:Button Content="Backup DB" Icon="{ui:SymbolIcon Database24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="BackupDb_Click" Margin="0,0,0,5"/>
                     <ui:Button Content="Restore DB" Icon="{ui:SymbolIcon ArrowUpload24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="RestoreDb_Click" Margin="0,0,0,5"/>
                     <ui:Button Content="Auto-Start" Icon="{ui:SymbolIcon Rocket24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="AutoStart_Click" Margin="0,0,0,5"/>
+
+                    <!-- BAG-ONG BUTTON PARA SA CUSTOM ALARM SOUND -->
+                    <ui:Button Content="Set Alarm Sound" Icon="{ui:SymbolIcon MusicNote224}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="SetAlarmSound_Click" Margin="0,0,0,5"/>
                 </StackPanel>
             </Border>
 
@@ -55,16 +58,11 @@
                 <Grid x:Name="TasksPanel" Visibility="Visible">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <!-- Dashboard Stats -->
                         <RowDefinition Height="Auto"/>
-                        <!-- Action Buttons -->
                         <RowDefinition Height="*"/>
-                        <!-- DataGrid -->
                     </Grid.RowDefinitions>
 
-                    <!-- DASHBOARD STATISTICS CARDS -->
                     <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,20">
-                        <!-- Card 1: Active Clients -->
                         <Border Background="#1A1D27" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="8" Margin="0,0,10,0" Padding="15">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -75,7 +73,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Card 2: Scheduled Tasks -->
                         <Border Background="#1A1D27" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="8" Margin="0,0,10,0" Padding="15">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -86,7 +83,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Card 3: Overdue Tasks -->
                         <Border Background="#1A1D27" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="8" Margin="0,0,10,0" Padding="15">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -97,7 +93,6 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Card 4: Completed This Week -->
                         <Border Background="#1A1D27" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="8" Padding="15">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -109,7 +104,6 @@
                         </Border>
                     </UniformGrid>
 
-                    <!-- ACTION BUTTONS & SEARCH -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
                         <ui:Button Content="➕ New Client" Click="AddClient_Click" Appearance="Primary" Margin="0,0,10,0"/>
                         <ui:Button Content="📝 Create Task" Click="AddTask_Click" Margin="0,0,20,0"/>
@@ -119,7 +113,6 @@
                                   Checked="ShowCompletedCheck_Changed" Unchecked="ShowCompletedCheck_Changed"/>
                     </StackPanel>
 
-                    <!-- DATA GRID -->
                     <DataGrid Grid.Row="2" x:Name="TaskGrid" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                         <DataGrid.ContextMenu>
                             <ContextMenu>

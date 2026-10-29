@@ -84,7 +84,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         using var db = new AppDbContext();
 
-        // --- UPDATE DASHBOARD STATS ---
         var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
 
         var activeClients = db.Clients.Count(c => !c.IsDeleted && c.Status != ClientStatus.Closed);
@@ -97,7 +96,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         OverdueTasksText.Text = overdueTasks.ToString();
         CompletedThisWeekText.Text = completedThisWeek.ToString();
 
-        // --- UPDATE TASKS GRID ---
         var query = db.Tasks.Include(t => t.Client).Where(t => !t.IsDeleted).AsQueryable();
 
         if (ShowCompletedCheck.IsChecked is not true)
@@ -113,8 +111,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
         var tasks = query.OrderBy(t => t.IsCompleted).ThenBy(t => t.DueDate).ToList();
         TaskGrid.ItemsSource = tasks;
-
-        // Gitangtang nako ang karaan nga StatusText update dinhi kay naa na sa Dashboard Cards.
     }
 
     private void TaskSearchBox_TextChanged(object sender, TextChangedEventArgs e) => Refresh();
@@ -533,6 +529,33 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             else { key.SetValue(appName, $"\"{exePath}\""); System.Windows.MessageBox.Show("Auto-start ENABLED!", "Auto-Start"); }
         }
         catch (Exception ex) { System.Windows.MessageBox.Show($"Error: {ex.Message}"); }
+    }
+
+    // ===== CUSTOM ALARM SOUND =====
+    private void SetAlarmSound_Click(object sender, RoutedEventArgs e)
+    {
+        var ofd = new OpenFileDialog
+        {
+            Filter = "Audio Files (*.wav;*.mp3)|*.wav;*.mp3",
+            Title = "Select Custom Alarm Sound"
+        };
+
+        if (ofd.ShowDialog() == true)
+        {
+            try
+            {
+                var appFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PLCTracker");
+                Directory.CreateDirectory(appFolder);
+                var soundPathFile = Path.Combine(appFolder, "alarm_sound.txt");
+
+                File.WriteAllText(soundPathFile, ofd.FileName);
+                System.Windows.MessageBox.Show("Custom alarm sound updated successfully!", "Settings", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Error saving sound: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     protected override void OnStateChanged(EventArgs e)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using PLCTracker.Data;
 using PLCTracker.Models;
@@ -8,6 +9,7 @@ namespace PLCTracker.Views;
 public partial class AlarmWindow : Window
 {
     private readonly TaskItem _task;
+    private System.Windows.Media.MediaPlayer? _mediaPlayer; // Gigamit para mo-play sa MP3/WAV
 
     public AlarmWindow(TaskItem task)
     {
@@ -19,17 +21,44 @@ public partial class AlarmWindow : Window
         PlayAlarmSound();
     }
 
-    private static async void PlayAlarmSound()
+    private async void PlayAlarmSound()
     {
-        for (int i = 0; i < 3; i++)
+        bool customPlayed = false;
+        try
         {
-            System.Media.SystemSounds.Exclamation.Play();
-            await System.Threading.Tasks.Task.Delay(1000);
+            var appFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PLCTracker");
+            var soundPath = Path.Combine(appFolder, "alarm_sound.txt");
+
+            if (File.Exists(soundPath))
+            {
+                string customSound = File.ReadAllText(soundPath).Trim();
+                if (!string.IsNullOrEmpty(customSound) && File.Exists(customSound))
+                {
+                    _mediaPlayer = new System.Windows.Media.MediaPlayer();
+                    _mediaPlayer.Open(new Uri(customSound));
+                    _mediaPlayer.Play();
+                    customPlayed = true;
+                }
+            }
+        }
+        catch
+        {
+            // Kung naay error sa custom sound, mo-fallback sa default
+        }
+
+        if (!customPlayed)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                System.Media.SystemSounds.Exclamation.Play();
+                await System.Threading.Tasks.Task.Delay(1000);
+            }
         }
     }
 
     private void Snooze_Click(object sender, RoutedEventArgs e)
     {
+        _mediaPlayer?.Stop(); // Pundota ang tingog kung nag-play
         using var db = new AppDbContext();
         var dbTask = db.Tasks.Find(_task.Id);
         if (dbTask is not null)
@@ -43,6 +72,7 @@ public partial class AlarmWindow : Window
 
     private void Dismiss_Click(object sender, RoutedEventArgs e)
     {
+        _mediaPlayer?.Stop(); // Pundota ang tingog kung nag-play
         Close();
     }
 }
