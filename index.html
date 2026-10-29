@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC Intake Tracker - Download</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0F111A;
+            color: #E2E8F0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* HEADER */
+        header {
+            padding: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #2D3748;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+        }
+
+        .logo span {
+            color: #7B61FF;
+            margin-right: 10px;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            text-align: center;
+            padding: 100px 0 80px;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            color: #FFFFFF;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero h1 span {
+            color: #7B61FF;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #94A3B8;
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+
+        /* DOWNLOAD BUTTON */
+        .btn-download {
+            display: inline-block;
+            background-color: #7B61FF;
+            color: white;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(123, 97, 255, 0.4);
+        }
+
+        .btn-download:hover {
+            background-color: #6B4CFF;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(123, 97, 255, 0.6);
+        }
+
+        .version-tag {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #94A3B8;
+        }
+
+        /* FEATURES SECTION */
+        .features {
+            padding: 80px 0;
+            background-color: #1A1D27;
+            border-top: 1px solid #2D3748;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 32px;
+            color: #FFFFFF;
+            margin-bottom: 50px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background-color: #0F111A;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #2D3748;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #7B61FF;
+        }
+
+        .card h3 {
+            color: #FFFFFF;
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card h3 span {
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .card p {
+            color: #94A3B8;
+            font-size: 15px;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid #2D3748;
+            color: #94A3B8;
+            font-size: 14px;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .hero p { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">
+                <span>📋</span> PLC Intake Tracker
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Streamline Your <span>Mental Health Intake</span> Workflow</h1>
+            <p>A secure, offline-first Windows desktop application designed to manage client follow-ups, callbacks, audit trails, and onboarding schedules efficiently.</p>
+            
+            <!-- KINI ANG DOWNLOAD BUTTON -->
+            <!-- Ang link kay mo-deretso sa imong pinaka-latest nga Release -->
+            <a href="https://github.com/kurtjoshuansel-byte/PLCTracker/releases/latest" class="btn-download">
+                📥 Download for Windows
+            </a>
+            <span class="version-tag">Latest Release (v1.2.0) - 100% Free</span>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <h2>Why Use PLC Intake Tracker?</h2>
+            <div class="grid">
+                
+                <div class="card">
+                    <h3><span>🔒</span> Secure & Private</h3>
+                    <p>All data is stored 100% locally on your machine. Features a 4-digit PIN login to protect sensitive client information.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>📋</span> Audit Trails</h3>
+                    <p>Track every action. View a full timeline of status changes, call outcomes, and completed tasks for compliance.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>⏰</span> Smart Alarms</h3>
+                    <p>Never miss a callback again. Custom pop-up alarms trigger 10 minutes before a task is due.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>🖨️</span> Print & Export</h3>
+                    <p>Generate printable daily call sheets or export your task data to CSV for Excel reporting.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>👥</span> Intake Pipeline</h3>
+                    <p>Track clients through every stage: New Referral, Screening, Scheduled, Completed, Missed, or Closed.</p>
+                </div>
+
+                <div class="card">
+                    <h3><span>🎨</span> Modern UI</h3>
+                    <p>Built with a sleek, dark-mode Windows 11 aesthetic that is easy on the eyes during long shifts.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Kurt Joshua. Built with ❤️ for Progressive Life Counseling.</p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/kurtjoshuansel-byte/PLCTracker" style="color: #7B61FF; text-decoration: none;">View Source Code on GitHub</a>
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
