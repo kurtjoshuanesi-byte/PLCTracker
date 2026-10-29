@@ -2,10 +2,12 @@
 
 public enum ClientStatus
 {
-    Pending,
+    NewReferral,
+    Screening,
     Scheduled,
-    Onboarded,
-    Dropped
+    Completed,
+    Missed,
+    Closed
 }
 
 public class Client
@@ -15,10 +17,21 @@ public class Client
     public string Phone { get; set; } = "";
     public string Email { get; set; } = "";
     public string Notes { get; set; } = "";
-    public ClientStatus Status { get; set; } = ClientStatus.Pending;
+    public ClientStatus Status { get; set; } = ClientStatus.NewReferral;
+    public string StatusReason { get; set; } = ""; // BAG-O: Reason for Missed/Closed
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-    // Giusab ngadto sa [] para mawala ang IDE0028 warning
     public List<TaskItem> Tasks { get; set; } = [];
+
+    // Display helper para sa DataGrid
+    public string StatusLabel => Status switch
+    {
+        ClientStatus.NewReferral => "🆕 New Referral",
+        ClientStatus.Screening => "🔍 Screening",
+        ClientStatus.Scheduled => "📅 Scheduled",
+        ClientStatus.Completed => "✅ Completed",
+        ClientStatus.Missed => "❌ Missed",
+        ClientStatus.Closed => "🔒 Closed",
+        _ => Status.ToString()
+    };
 }

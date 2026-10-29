@@ -25,7 +25,6 @@ public partial class LoginWindow : Wpf.Ui.Controls.FluentWindow
     {
         var savedPin = File.ReadAllText(_pinFilePath).Trim();
 
-        // Gigamit ang PinBox.Password imbes .Text
         if (PinBox.Password == savedPin)
         {
             DialogResult = true;
@@ -39,7 +38,6 @@ public partial class LoginWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
-    // Gi-fully qualify ang KeyEventArgs para dili mag-conflict sa WinForms
     private void PinBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == System.Windows.Input.Key.Enter) Unlock_Click(sender, e);
@@ -47,7 +45,6 @@ public partial class LoginWindow : Wpf.Ui.Controls.FluentWindow
 
     private void ForgotPin_Click(object sender, RoutedEventArgs e)
     {
-        // Gi-fully qualify ang MessageBox
         var result = System.Windows.MessageBox.Show("Reset PIN to default ('1234')?", "Forgot PIN", MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (result == MessageBoxResult.Yes)
         {

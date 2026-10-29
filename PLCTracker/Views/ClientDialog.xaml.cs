@@ -7,12 +7,15 @@ namespace PLCTracker.Views;
 public partial class ClientDialog : Window
 {
     private readonly int? _clientId = null;
+
     public int SavedClientId { get; private set; }
+    public ClientStatus UpdatedStatus { get; private set; }
+    public string UpdatedReason { get; private set; } = "";
 
     public ClientDialog()
     {
         InitializeComponent();
-        StatusCombo.SelectedIndex = 0;
+        StatusCombo.SelectedIndex = 0; // NewReferral
     }
 
     public ClientDialog(Client existingClient)
@@ -24,6 +27,7 @@ public partial class ClientDialog : Window
         EmailBox.Text = existingClient.Email;
         NotesBox.Text = existingClient.Notes;
         StatusCombo.SelectedIndex = (int)existingClient.Status;
+        StatusReasonBox.Text = existingClient.StatusReason;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)
@@ -36,6 +40,9 @@ public partial class ClientDialog : Window
 
         using var db = new AppDbContext();
 
+        UpdatedStatus = (ClientStatus)StatusCombo.SelectedIndex;
+        UpdatedReason = StatusReasonBox.Text.Trim();
+
         if (_clientId is null)
         {
             var newClient = new Client
@@ -44,7 +51,8 @@ public partial class ClientDialog : Window
                 Phone = PhoneBox.Text.Trim(),
                 Email = EmailBox.Text.Trim(),
                 Notes = NotesBox.Text.Trim(),
-                Status = (ClientStatus)StatusCombo.SelectedIndex
+                Status = UpdatedStatus,
+                StatusReason = UpdatedReason
             };
             db.Clients.Add(newClient);
             db.SaveChanges();
@@ -59,7 +67,8 @@ public partial class ClientDialog : Window
                 client.Phone = PhoneBox.Text.Trim();
                 client.Email = EmailBox.Text.Trim();
                 client.Notes = NotesBox.Text.Trim();
-                client.Status = (ClientStatus)StatusCombo.SelectedIndex;
+                client.Status = UpdatedStatus;
+                client.StatusReason = UpdatedReason;
                 db.SaveChanges();
                 SavedClientId = client.Id;
             }

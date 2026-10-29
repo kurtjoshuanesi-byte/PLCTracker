@@ -19,7 +19,6 @@
 
             <TextBlock Text="Enter 4-Digit PIN" FontSize="14" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
-            <!-- Gigamit ang PasswordBox imbes TextBox -->
             <ui:PasswordBox x:Name="PinBox" FontSize="24" MaxLength="4" KeyDown="PinBox_KeyDown" Margin="0,0,0,15"/>
 
             <ui:Button Content="UNLOCK" Click="Unlock_Click" Appearance="Primary" HorizontalAlignment="Stretch" Height="40" FontWeight="Bold" Margin="0,0,0,10"/>

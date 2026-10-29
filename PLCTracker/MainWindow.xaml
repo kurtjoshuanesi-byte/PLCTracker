@@ -14,14 +14,11 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- KINI ANG SAKTONG TITLE BAR NGA NAAY ICON -->
         <ui:TitleBar Grid.Row="0" Title="PLC Intake Tracker" ShowMaximize="True" ShowMinimize="True">
             <ui:TitleBar.Icon>
                 <ui:ImageIcon Source="pack://application:,,,/app.ico"/>
             </ui:TitleBar.Icon>
         </ui:TitleBar>
-
-        <!-- (Ang ubang Grid code nimo sa ubos, wala nay usbon) -->
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
@@ -37,7 +34,12 @@
                     <ui:Button x:Name="BtnTasks" Content="Tasks" Icon="{ui:SymbolIcon TaskListLtr24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="BtnTasks_Click" Margin="0,0,0,5"/>
                     <ui:Button x:Name="BtnClients" Content="Clients" Icon="{ui:SymbolIcon People24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="BtnClients_Click" Margin="0,0,0,5"/>
 
-                    <TextBlock Text="SETTINGS" Foreground="#94A3B8" Margin="10,20,10,5" FontSize="11" FontWeight="Bold"/>
+                    <TextBlock Text="REPORTS" Foreground="#94A3B8" Margin="10,15,10,5" FontSize="11" FontWeight="Bold"/>
+
+                    <ui:Button Content="Print Daily List" Icon="{ui:SymbolIcon Print24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="PrintSummary_Click" Margin="0,0,0,5"/>
+                    <ui:Button Content="Export to CSV" Icon="{ui:SymbolIcon DocumentTable24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="ExportCsv_Click" Margin="0,0,0,5"/>
+
+                    <TextBlock Text="SETTINGS" Foreground="#94A3B8" Margin="10,15,10,5" FontSize="11" FontWeight="Bold"/>
 
                     <ui:Button Content="Import CSV" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="ImportCsv_Click" Margin="0,0,0,5"/>
                     <ui:Button Content="Backup DB" Icon="{ui:SymbolIcon Database24}" Appearance="Transparent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Click="BackupDb_Click" Margin="0,0,0,5"/>
@@ -115,7 +117,7 @@
                               MouseDoubleClick="ClientGrid_MouseDoubleClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="180"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusLabel}" Width="120"/>
                             <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="130"/>
                             <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="180"/>
                             <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" Width="*"/>

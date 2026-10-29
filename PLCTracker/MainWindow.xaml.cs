@@ -1,9 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 using PLCTracker.Data;
@@ -47,7 +50,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         };
     }
 
-    // ===== HELPER: LOG ACTION (Giusab ngadto sa static) =====
+    // ===== HELPER: LOG ACTION =====
     private static void LogAction(int clientId, string action, string details)
     {
         using var db = new AppDbContext();
@@ -192,10 +195,21 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             var client = db.Clients.Find(clientItem.Id);
             if (client is not null)
             {
+                var oldStatus = client.Status;
                 var dlg = new ClientDialog(client) { Owner = this };
                 if (dlg.ShowDialog() is true)
                 {
-                    LogAction(client.Id, "Client Profile Updated", $"Status: {client.Status}");
+                    // KUNG NAG-USAB ANG STATUS, I-LOG ANG REASON UG TIMESTAMP
+                    if (oldStatus != dlg.UpdatedStatus)
+                    {
+                        string reasonLog = string.IsNullOrWhiteSpace(dlg.UpdatedReason) ? "No reason provided." : dlg.UpdatedReason;
+                        LogAction(client.Id, "Status Changed", $"Moved from {oldStatus} to {dlg.UpdatedStatus}. Reason: {reasonLog}");
+                    }
+                    else
+                    {
+                        LogAction(client.Id, "Client Profile Updated", $"Status: {client.Status}");
+                    }
+
                     Refresh(); RefreshClients();
                 }
             }
@@ -231,7 +245,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         var dlg = new ClientDialog { Owner = this };
         if (dlg.ShowDialog() is true)
         {
-            LogAction(dlg.SavedClientId, "Client Added", "New client registered.");
+            LogAction(dlg.SavedClientId, "Client Added", $"New referral registered. Status: {dlg.UpdatedStatus}");
             Refresh(); RefreshClients();
             BtnClients_Click(this, new RoutedEventArgs());
         }
@@ -251,7 +265,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
-    // ===== MGA LAING METHODS =====
+    // ===== MGA LAING METHODS (Parehas sa miaging code) =====
     private void CopyPhone_Click(object sender, RoutedEventArgs e)
     {
         if (TaskGrid.SelectedItem is TaskItem task && task.Client is not null)
@@ -309,6 +323,109 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
+    private void PrintSummary_Click(object sender, RoutedEventArgs e)
+    {
+        using var db = new AppDbContext();
+        var tomorrow = DateTime.Today.AddDays(1);
+        var tasks = db.Tasks.Include(t => t.Client)
+            .Where(t => !t.IsCompleted && !t.IsDeleted && t.DueDate < tomorrow)
+            .OrderBy(t => t.DueDate)
+            .ToList();
+
+        if (tasks.Count == 0)
+        {
+            System.Windows.MessageBox.Show("Walay tasks for today nga ma-print.", "Empty", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var doc = new FlowDocument { PagePadding = new Thickness(50), ColumnWidth = double.PositiveInfinity };
+
+        doc.Blocks.Add(new Paragraph(new Run("PLC Intake Tracker - Daily Call Sheet"))
+        {
+            FontSize = 22,
+            FontWeight = FontWeights.Bold,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 5)
+        });
+
+        doc.Blocks.Add(new Paragraph(new Run($"Date Printed: {DateTime.Now:MMMM dd, yyyy hh:mm tt}"))
+        {
+            FontSize = 12,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 20)
+        });
+
+        var table = new Table();
+        table.Columns.Add(new TableColumn { Width = new GridLength(150) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(120) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(100) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(120) });
+        table.Columns.Add(new TableColumn { Width = new GridLength(250) });
+
+        var rowGroup = new TableRowGroup();
+        table.RowGroups.Add(rowGroup);
+
+        var headerRow = new TableRow { Background = Brushes.LightGray };
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("Client Name")) { FontWeight = FontWeights.Bold }));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("Phone")) { FontWeight = FontWeights.Bold }));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("Due Time")) { FontWeight = FontWeights.Bold }));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("Task Type")) { FontWeight = FontWeights.Bold }));
+        headerRow.Cells.Add(new TableCell(new Paragraph(new Run("Notes")) { FontWeight = FontWeights.Bold }));
+        rowGroup.Rows.Add(headerRow);
+
+        foreach (var task in tasks)
+        {
+            var row = new TableRow();
+            row.Cells.Add(new TableCell(new Paragraph(new Run(task.Client?.Name ?? "Unknown"))));
+            row.Cells.Add(new TableCell(new Paragraph(new Run(task.Client?.Phone ?? ""))));
+            row.Cells.Add(new TableCell(new Paragraph(new Run(task.DueDate.ToString("hh:mm tt")))));
+            row.Cells.Add(new TableCell(new Paragraph(new Run(task.TypeLabel))));
+            row.Cells.Add(new TableCell(new Paragraph(new Run(task.Notes))));
+            rowGroup.Rows.Add(row);
+        }
+
+        doc.Blocks.Add(table);
+
+        PrintDialog printDialog = new();
+        if (printDialog.ShowDialog() == true)
+        {
+            doc.PageHeight = printDialog.PrintableAreaHeight;
+            doc.PageWidth = printDialog.PrintableAreaWidth;
+            IDocumentPaginatorSource idpSource = doc;
+            printDialog.PrintDocument(idpSource.DocumentPaginator, "PLC Daily Call Sheet");
+        }
+    }
+
+    private void ExportCsv_Click(object sender, RoutedEventArgs e)
+    {
+        var sfd = new SaveFileDialog
+        {
+            Filter = "CSV Files (*.csv)|*.csv",
+            FileName = $"PLCTracker_Export_{DateTime.Now:yyyyMMdd_HHmm}.csv"
+        };
+
+        if (sfd.ShowDialog() is not true) return;
+
+        using var db = new AppDbContext();
+        var tasks = db.Tasks.Include(t => t.Client).Where(t => !t.IsDeleted).OrderBy(t => t.DueDate).ToList();
+
+        var csv = new StringBuilder();
+        csv.AppendLine("Client Name,Phone,Task Type,Due Date,Status,Notes");
+
+        foreach (var t in tasks)
+        {
+            var notes = $"\"{t.Notes.Replace("\"", "\"\"")}\"";
+            var clientName = $"\"{t.Client?.Name}\"";
+            var phone = t.Client?.Phone ?? "";
+            var type = t.TypeLabel.Replace("📞 ", "").Replace("🔁 ", "").Replace("📋 ", "").Replace("📌 ", "");
+
+            csv.AppendLine($"{clientName},{phone},{type},{t.DueDate:yyyy-MM-dd HH:mm},{t.StatusLabel},{notes}");
+        }
+
+        File.WriteAllText(sfd.FileName, csv.ToString(), Encoding.UTF8);
+        System.Windows.MessageBox.Show("Export successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
     private void ImportCsv_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog { Filter = "CSV Files (*.csv)|*.csv", Title = "Select CSV file to import clients" };
@@ -336,7 +453,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 string email = fields.Length > 2 ? fields[2].Trim() : "";
                 string notes = fields.Length > 3 ? fields[3].Trim() : "";
 
-                ClientStatus status = ClientStatus.Pending;
+                ClientStatus status = ClientStatus.NewReferral;
                 if (fields.Length > 4 && Enum.TryParse<ClientStatus>(fields[4].Trim(), true, out var parsedStatus))
                     status = parsedStatus;
 

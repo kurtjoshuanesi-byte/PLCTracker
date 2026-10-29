@@ -9,6 +9,7 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>app.ico</ApplicationIcon>
 		<NoWarn>CA1416;NU1903</NoWarn>
+		<StartupObject>PLCTracker.App</StartupObject>
 	</PropertyGroup>
 
 	<ItemGroup>
