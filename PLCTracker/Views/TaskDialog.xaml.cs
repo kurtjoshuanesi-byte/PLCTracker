@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using PLCTracker.Data;
 using PLCTracker.Models;
 
@@ -8,7 +9,7 @@ public partial class TaskDialog : Window
 {
     private readonly int? _taskId = null;
 
-    public TaskDialog() : this(TaskType.Custom, DateTime.Now.AddHours(1), "") { } // For ADD
+    public TaskDialog() : this(TaskType.Custom, DateTime.Now.AddHours(1), "") { }
 
     public TaskDialog(TaskType type, DateTime due, string notes)
     {
@@ -20,13 +21,12 @@ public partial class TaskDialog : Window
         NotesBox.Text = notes;
     }
 
-    public TaskDialog(TaskItem existingTask) // For EDIT
+    public TaskDialog(TaskItem existingTask)
     {
         InitializeComponent();
         _taskId = existingTask.Id;
         LoadClients();
 
-        // Set selected client
         using var db = new AppDbContext();
         var client = db.Clients.Find(existingTask.ClientId);
         ClientCombo.SelectedItem = client;
@@ -41,7 +41,7 @@ public partial class TaskDialog : Window
     {
         using var db = new AppDbContext();
         ClientCombo.ItemsSource = db.Clients.OrderBy(c => c.Name).ToList();
-        if (ClientCombo.Items.Count > 0 && _taskId == null) ClientCombo.SelectedIndex = 0;
+        if (ClientCombo.Items.Count > 0 && _taskId is null) ClientCombo.SelectedIndex = 0;
     }
 
     private void Save_Click(object sender, RoutedEventArgs e)
@@ -52,16 +52,23 @@ public partial class TaskDialog : Window
             return;
         }
 
+        // KINI ANG PINAKA-MODERNO NGA NULL CHECK
+        if (DueDatePicker.SelectedDate is not DateTime selectedDate)
+        {
+            MessageBox.Show("Pili og date.");
+            return;
+        }
+
         if (!TimeSpan.TryParse(DueTimeBox.Text, out var time))
         {
             MessageBox.Show("Time format: HH:mm (e.g. 14:30)");
             return;
         }
 
-        var due = DueDatePicker.SelectedDate!.Value.Date + time;
+        var due = selectedDate.Date + time; // Gigamit na ang selectedDate
         using var db = new AppDbContext();
 
-        if (_taskId == null) // ADD
+        if (_taskId is null)
         {
             db.Tasks.Add(new TaskItem
             {
@@ -71,16 +78,16 @@ public partial class TaskDialog : Window
                 Notes = NotesBox.Text.Trim()
             });
         }
-        else // EDIT
+        else
         {
             var task = db.Tasks.Find(_taskId);
-            if (task != null)
+            if (task is not null)
             {
                 task.ClientId = client.Id;
                 task.Type = (TaskType)TypeCombo.SelectedIndex;
                 task.DueDate = due;
                 task.Notes = NotesBox.Text.Trim();
-                task.IsNotified = false; // Reset notification
+                task.IsNotified = false;
             }
         }
 

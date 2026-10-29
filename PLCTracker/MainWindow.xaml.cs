@@ -13,7 +13,7 @@ using PLCTracker.Views;
 
 namespace PLCTracker;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly NotificationService _notifier;
     private bool _reallyExit = false;
@@ -47,27 +47,36 @@ public partial class MainWindow : Window
         };
     }
 
-    private void MainTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    // ===== NAVIGATION LOGIC =====
+    private void BtnTasks_Click(object sender, RoutedEventArgs e)
     {
-        if (!IsLoaded) return;
+        TasksPanel.Visibility = Visibility.Visible;
+        ClientsPanel.Visibility = Visibility.Collapsed;
         Refresh();
+    }
+
+    private void BtnClients_Click(object sender, RoutedEventArgs e)
+    {
+        TasksPanel.Visibility = Visibility.Collapsed;
+        ClientsPanel.Visibility = Visibility.Visible;
         RefreshClients();
     }
 
+    // ===== TASKS LOGIC =====
     private void Refresh()
     {
         using var db = new AppDbContext();
         var query = db.Tasks.Include(t => t.Client).AsQueryable();
 
-        if (ShowCompletedCheck.IsChecked != true)
+        if (ShowCompletedCheck.IsChecked is not true)
             query = query.Where(t => !t.IsCompleted);
 
         if (!string.IsNullOrWhiteSpace(TaskSearchBox.Text))
         {
-            var search = TaskSearchBox.Text.ToLower();
-            query = query.Where(t => t.Client!.Name.ToLower().Contains(search) ||
-                                     t.Notes.ToLower().Contains(search) ||
-                                     t.Client!.Phone.Contains(search));
+            var search = TaskSearchBox.Text;
+            query = query.Where(t => t.Client!.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                                     t.Notes.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                                     t.Client!.Phone.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
         var tasks = query.OrderBy(t => t.IsCompleted).ThenBy(t => t.DueDate).ToList();
@@ -85,11 +94,11 @@ public partial class MainWindow : Window
 
     private void CompleteTask_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is TaskItem taskItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is TaskItem taskItem)
         {
             using var db = new AppDbContext();
             var task = db.Tasks.Find(taskItem.Id);
-            if (task != null)
+            if (task is not null)
             {
                 task.IsCompleted = !task.IsCompleted;
                 task.CompletedAt = task.IsCompleted ? DateTime.Now : null;
@@ -102,14 +111,14 @@ public partial class MainWindow : Window
 
     private void EditTask_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is TaskItem taskItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is TaskItem taskItem)
         {
             using var db = new AppDbContext();
             var task = db.Tasks.Find(taskItem.Id);
-            if (task != null)
+            if (task is not null)
             {
                 var dlg = new TaskDialog(task) { Owner = this };
-                if (dlg.ShowDialog() == true) Refresh();
+                if (dlg.ShowDialog() is true) Refresh();
             }
             e.Handled = true;
         }
@@ -117,13 +126,13 @@ public partial class MainWindow : Window
 
     private void DeleteTask_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is TaskItem taskItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is TaskItem taskItem)
         {
-            if (MessageBox.Show("Delete this task?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (System.Windows.MessageBox.Show("Delete this task?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 using var db = new AppDbContext();
                 var task = db.Tasks.Find(taskItem.Id);
-                if (task != null) { db.Tasks.Remove(task); db.SaveChanges(); }
+                if (task is not null) { db.Tasks.Remove(task); db.SaveChanges(); }
                 Refresh();
             }
             e.Handled = true;
@@ -132,12 +141,12 @@ public partial class MainWindow : Window
 
     private void CopyPhone_Click(object sender, RoutedEventArgs e)
     {
-        if (TaskGrid.SelectedItem is TaskItem task && task.Client != null)
+        if (TaskGrid.SelectedItem is TaskItem task && task.Client is not null)
         {
             Clipboard.SetText(task.Client.Phone);
-            MessageBox.Show($"Copied: {task.Client.Phone}", "Copied", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show($"Copied: {task.Client.Phone}", "Copied", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        else MessageBox.Show("Pilia una ang task.");
+        else System.Windows.MessageBox.Show("Pilia una ang task.");
     }
 
     private void Snooze15_Click(object sender, RoutedEventArgs e) => SnoozeTask(15);
@@ -148,16 +157,17 @@ public partial class MainWindow : Window
         if (TaskGrid.SelectedItem is not TaskItem task) return;
         using var db = new AppDbContext();
         var dbTask = db.Tasks.Find(task.Id);
-        if (dbTask != null)
+        if (dbTask is not null)
         {
             dbTask.DueDate = DateTime.Now.AddMinutes(minutes);
             dbTask.IsNotified = false;
             db.SaveChanges();
             Refresh();
-            MessageBox.Show($"Task snoozed for {minutes} minutes.", "Snoozed");
+            System.Windows.MessageBox.Show($"Task snoozed for {minutes} minutes.", "Snoozed");
         }
     }
 
+    // ===== CLIENTS LOGIC =====
     private void RefreshClients()
     {
         using var db = new AppDbContext();
@@ -165,10 +175,10 @@ public partial class MainWindow : Window
 
         if (!string.IsNullOrWhiteSpace(ClientSearchBox.Text))
         {
-            var search = ClientSearchBox.Text.ToLower();
-            query = query.Where(c => c.Name.ToLower().Contains(search) ||
-                                     c.Phone.Contains(search) ||
-                                     c.Email.ToLower().Contains(search));
+            var search = ClientSearchBox.Text;
+            query = query.Where(c => c.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                                     c.Phone.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                                     c.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
         }
 
         var clients = query.OrderBy(c => c.Name).ToList();
@@ -180,14 +190,14 @@ public partial class MainWindow : Window
 
     private void EditClient_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is Client clientItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem)
         {
             using var db = new AppDbContext();
             var client = db.Clients.Find(clientItem.Id);
-            if (client != null)
+            if (client is not null)
             {
                 var dlg = new ClientDialog(client) { Owner = this };
-                if (dlg.ShowDialog() == true) { Refresh(); RefreshClients(); }
+                if (dlg.ShowDialog() is true) { Refresh(); RefreshClients(); }
             }
             e.Handled = true;
         }
@@ -195,14 +205,14 @@ public partial class MainWindow : Window
 
     private void DeleteClient_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is Client clientItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem)
         {
             using var db = new AppDbContext();
             var client = db.Clients.Include(c => c.Tasks).FirstOrDefault(c => c.Id == clientItem.Id);
-            if (client != null)
+            if (client is not null)
             {
                 var msg = client.Tasks.Count > 0 ? $"Delete '{client.Name}' and {client.Tasks.Count} task(s)?" : $"Delete '{client.Name}'?";
-                if (MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (System.Windows.MessageBox.Show(msg, "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
                 {
                     db.Tasks.RemoveRange(client.Tasks);
                     db.Clients.Remove(client);
@@ -225,22 +235,16 @@ public partial class MainWindow : Window
 
     private void CallClient_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is Client clientItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem)
         {
             if (string.IsNullOrWhiteSpace(clientItem.Phone))
             {
-                MessageBox.Show("Walay phone number kining clienta.", "No Phone", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Walay phone number kining clienta.", "No Phone", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             else
             {
-                try
-                {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"tel:{clientItem.Phone}") { UseShellExecute = true });
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error calling: {ex.Message}");
-                }
+                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"tel:{clientItem.Phone}") { UseShellExecute = true }); }
+                catch (Exception ex) { System.Windows.MessageBox.Show($"Error calling: {ex.Message}"); }
             }
             e.Handled = true;
         }
@@ -248,22 +252,16 @@ public partial class MainWindow : Window
 
     private void EmailClient_Click(object sender, MouseButtonEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is Client clientItem)
+        if (sender is System.Windows.Controls.Button btn && btn.Tag is Client clientItem)
         {
             if (string.IsNullOrWhiteSpace(clientItem.Email))
             {
-                MessageBox.Show("Walay email kining clienta.", "No Email", MessageBoxButton.OK, MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Walay email kining clienta.", "No Email", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             else
             {
-                try
-                {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"mailto:{clientItem.Email}") { UseShellExecute = true });
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error opening email: {ex.Message}");
-                }
+                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo($"mailto:{clientItem.Email}") { UseShellExecute = true }); }
+                catch (Exception ex) { System.Windows.MessageBox.Show($"Error opening email: {ex.Message}"); }
             }
             e.Handled = true;
         }
@@ -272,51 +270,43 @@ public partial class MainWindow : Window
     private void AddClient_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new ClientDialog { Owner = this };
-        if (dlg.ShowDialog() == true) { Refresh(); RefreshClients(); MainTabs.SelectedIndex = 1; }
+        if (dlg.ShowDialog() is true)
+        {
+            Refresh();
+            RefreshClients();
+            BtnClients_Click(this, new RoutedEventArgs());
+        }
     }
 
     private void AddTask_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new TaskDialog() { Owner = this };
-        if (dlg.ShowDialog() == true) { Refresh(); MainTabs.SelectedIndex = 0; }
+        if (dlg.ShowDialog() is true)
+        {
+            Refresh();
+            BtnTasks_Click(this, new RoutedEventArgs());
+        }
     }
 
-    private void ShowAgenda_Click(object sender, RoutedEventArgs e)
-    {
-        var dlg = new DailyAgendaDialog { Owner = this };
-        dlg.ShowDialog();
-    }
-
-    // ===== IMPORT FROM CSV =====
     private void ImportCsv_Click(object sender, RoutedEventArgs e)
     {
-        var ofd = new OpenFileDialog
-        {
-            Filter = "CSV Files (*.csv)|*.csv",
-            Title = "Select CSV file to import clients"
-        };
-
-        if (ofd.ShowDialog() != true) return;
+        var ofd = new OpenFileDialog { Filter = "CSV Files (*.csv)|*.csv", Title = "Select CSV file to import clients" };
+        if (ofd.ShowDialog() is not true) return;
 
         try
         {
             int importedCount = 0;
             using var db = new AppDbContext();
-
             using var parser = new Microsoft.VisualBasic.FileIO.TextFieldParser(ofd.FileName);
             parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
             parser.SetDelimiters(",");
 
-            // Skip header row
-            if (!parser.EndOfData)
-            {
-                parser.ReadFields();
-            }
+            if (!parser.EndOfData) parser.ReadFields();
 
             while (!parser.EndOfData)
             {
                 string[]? fields = parser.ReadFields();
-                if (fields == null || fields.Length < 1) continue;
+                if (fields is null || fields.Length < 1) continue;
 
                 string name = fields[0].Trim();
                 if (string.IsNullOrWhiteSpace(name)) continue;
@@ -327,90 +317,55 @@ public partial class MainWindow : Window
 
                 ClientStatus status = ClientStatus.Pending;
                 if (fields.Length > 4 && Enum.TryParse<ClientStatus>(fields[4].Trim(), true, out var parsedStatus))
-                {
                     status = parsedStatus;
-                }
 
-                if (db.Clients.Any(c => c.Name.ToLower() == name.ToLower())) continue;
+                if (db.Clients.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) continue;
 
-                db.Clients.Add(new Client
-                {
-                    Name = name,
-                    Phone = phone,
-                    Email = email,
-                    Notes = notes,
-                    Status = status
-                });
+                db.Clients.Add(new Client { Name = name, Phone = phone, Email = email, Notes = notes, Status = status });
                 importedCount++;
             }
 
             if (importedCount > 0)
             {
                 db.SaveChanges();
-                MessageBox.Show($"Successfully imported {importedCount} clients!", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show($"Successfully imported {importedCount} clients!", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
                 RefreshClients();
+                BtnClients_Click(this, new RoutedEventArgs());
             }
-            else
-            {
-                MessageBox.Show("No new clients found to import. Check your CSV format or duplicate names.", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            else System.Windows.MessageBox.Show("No new clients found.", "No Data", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error importing CSV: {ex.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        catch (Exception ex) { System.Windows.MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error); }
     }
 
-    private string GetDbPath()
-    {
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PLCTracker", "tracker.db");
-    }
+    private static string GetDbPath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PLCTracker", "tracker.db");
 
     private void BackupDb_Click(object sender, RoutedEventArgs e)
     {
-        var sfd = new SaveFileDialog
+        var sfd = new SaveFileDialog { Filter = "SQLite Database (*.db)|*.db", FileName = $"PLCTracker_Backup_{DateTime.Now:yyyyMMdd_HHmm}.db" };
+        if (sfd.ShowDialog() is true)
         {
-            Filter = "SQLite Database (*.db)|*.db",
-            FileName = $"PLCTracker_Backup_{DateTime.Now:yyyyMMdd_HHmm}.db"
-        };
-
-        if (sfd.ShowDialog() == true)
-        {
-            try
-            {
-                File.Copy(GetDbPath(), sfd.FileName, true);
-                MessageBox.Show("Backup successful! Naka-save na ang kopya sa imong database.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Backup failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            try { File.Copy(GetDbPath(), sfd.FileName, true); System.Windows.MessageBox.Show("Backup successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information); }
+            catch (Exception ex) { System.Windows.MessageBox.Show($"Backup failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
     }
 
     private void RestoreDb_Click(object sender, RoutedEventArgs e)
     {
         var ofd = new OpenFileDialog { Filter = "SQLite Database (*.db)|*.db" };
-
-        if (ofd.ShowDialog() == true)
+        if (ofd.ShowDialog() is true)
         {
-            var confirm = MessageBox.Show("Kining aksyona mo-overwrite sa imong karon nga data. Sigurado ka ba?", "Confirm Restore", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            var confirm = System.Windows.MessageBox.Show("Overwrite current data?", "Confirm", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (confirm != MessageBoxResult.Yes) return;
 
             try
             {
-                var dbPath = GetDbPath();
                 Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-                File.Copy(ofd.FileName, dbPath, true);
-
-                MessageBox.Show("Database restored successfully! I-restart ang app para makita ang mga kausaban.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                File.Copy(ofd.FileName, GetDbPath(), true);
+                System.Windows.MessageBox.Show("Restored! App will restart.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
                 Application.Current.Shutdown();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Restore failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { System.Windows.MessageBox.Show($"Restore failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
     }
 
@@ -420,26 +375,15 @@ public partial class MainWindow : Window
         {
             string runKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
             string appName = "PLCTracker";
-            string exePath = System.Diagnostics.Process.GetCurrentProcess().MainModule!.FileName!;
 
-            using var key = Registry.CurrentUser.OpenSubKey(runKey, true);
-            if (key == null) throw new Exception("Could not open registry key.");
+            string exePath = Environment.ProcessPath ?? throw new Exception("Could not get process path.");
 
-            if (key.GetValue(appName) != null)
-            {
-                key.DeleteValue(appName);
-                MessageBox.Show("Auto-start DISABLED. Dili na mo-open inig-boot sa PC.", "Auto-Start", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                key.SetValue(appName, $"\"{exePath}\"");
-                MessageBox.Show("Auto-start ENABLED! Mo-open na ang app inig-boot sa PC.", "Auto-Start", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            using var key = Registry.CurrentUser.OpenSubKey(runKey, true) ?? throw new Exception("Could not open registry key.");
+
+            if (key.GetValue(appName) is not null) { key.DeleteValue(appName); System.Windows.MessageBox.Show("Auto-start DISABLED.", "Auto-Start"); }
+            else { key.SetValue(appName, $"\"{exePath}\""); System.Windows.MessageBox.Show("Auto-start ENABLED!", "Auto-Start"); }
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error setting auto-start: {ex.Message}");
-        }
+        catch (Exception ex) { System.Windows.MessageBox.Show($"Error: {ex.Message}"); }
     }
 
     protected override void OnStateChanged(EventArgs e)
@@ -457,7 +401,7 @@ public partial class MainWindow : Window
             if (!_hintShown)
             {
                 _hintShown = true;
-                _notifier.ShowBalloon("PLC Tracker is still running", "Naa ra ko sa system tray. Right-click → Exit para i-close.", System.Windows.Forms.ToolTipIcon.Info, 5000);
+                _notifier.ShowBalloon("PLC Tracker is still running", "Naa ra ko sa system tray.", System.Windows.Forms.ToolTipIcon.Info, 5000);
             }
             return;
         }

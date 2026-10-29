@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using Microsoft.EntityFrameworkCore;
 using PLCTracker.Data;
 
@@ -18,19 +19,19 @@ public partial class DailyAgendaDialog : Window
 
         var tomorrow = DateTime.Today.AddDays(1);
 
-        // Kuhaa ang tanang overdue ug tasks for today
         var tasks = db.Tasks
             .Include(t => t.Client)
             .Where(t => !t.IsCompleted && t.DueDate < tomorrow)
             .OrderBy(t => t.DueDate)
             .ToList();
 
+        // Giusab dinhi: Gikuha ang "TypeLabel =" ug "Notes =" kay automatic na siya ma-infer sa C#
         var displayList = tasks.Select(t => new
         {
             TimeString = t.DueDate < DateTime.Now ? "OVERDUE" : t.DueDate.ToString("hh:mm tt"),
-            TypeLabel = t.TypeLabel,
+            t.TypeLabel,
             ClientName = t.Client?.Name ?? "Unknown",
-            Notes = t.Notes
+            t.Notes
         }).ToList();
 
         AgendaList.ItemsSource = displayList;

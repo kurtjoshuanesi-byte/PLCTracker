@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using PLCTracker.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,18 +27,16 @@ public class NotificationService : IDisposable
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(exitItem);
 
-        // Load custom icon safely
         System.Drawing.Icon? customIcon = null;
         try
         {
             var iconUri = new Uri("pack://application:,,,/app.ico");
             var iconStream = System.Windows.Application.GetResourceStream(iconUri)?.Stream;
-            if (iconStream != null)
+            if (iconStream is not null)
                 customIcon = new System.Drawing.Icon(iconStream);
         }
         catch
         {
-            // Kung naay error sa pag-load sa app.ico, mo-fallback sa default
         }
 
         _trayIcon = new NotifyIcon
@@ -103,5 +102,6 @@ public class NotificationService : IDisposable
         _timer.Stop();
         _trayIcon.Visible = false;
         _trayIcon.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

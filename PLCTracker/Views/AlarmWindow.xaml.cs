@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using PLCTracker.Data;
 using PLCTracker.Models;
 
@@ -18,7 +19,7 @@ public partial class AlarmWindow : Window
         PlayAlarmSound();
     }
 
-    private async void PlayAlarmSound()
+    private static async void PlayAlarmSound()
     {
         for (int i = 0; i < 3; i++)
         {
@@ -31,7 +32,7 @@ public partial class AlarmWindow : Window
     {
         using var db = new AppDbContext();
         var dbTask = db.Tasks.Find(_task.Id);
-        if (dbTask != null)
+        if (dbTask is not null)
         {
             dbTask.DueDate = DateTime.Now.AddMinutes(5);
             dbTask.IsNotified = false;

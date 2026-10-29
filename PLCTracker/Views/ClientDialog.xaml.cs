@@ -8,13 +8,13 @@ public partial class ClientDialog : Window
 {
     private readonly int? _clientId = null;
 
-    public ClientDialog() // For ADDING
+    public ClientDialog()
     {
         InitializeComponent();
         StatusCombo.SelectedIndex = 0;
     }
 
-    public ClientDialog(Client existingClient) // For EDITING
+    public ClientDialog(Client existingClient)
     {
         InitializeComponent();
         _clientId = existingClient.Id;
@@ -35,7 +35,7 @@ public partial class ClientDialog : Window
 
         using var db = new AppDbContext();
 
-        if (_clientId == null) // ADD
+        if (_clientId is null)
         {
             db.Clients.Add(new Client
             {
@@ -46,10 +46,10 @@ public partial class ClientDialog : Window
                 Status = (ClientStatus)StatusCombo.SelectedIndex
             });
         }
-        else // EDIT
+        else
         {
             var client = db.Clients.Find(_clientId);
-            if (client != null)
+            if (client is not null)
             {
                 client.Name = NameBox.Text.Trim();
                 client.Phone = PhoneBox.Text.Trim();

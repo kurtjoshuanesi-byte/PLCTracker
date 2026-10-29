@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace PLCTracker.Views;
 
@@ -10,18 +11,19 @@ public partial class DateInputDialog : Window
     {
         InitializeComponent();
         PromptText.Text = prompt;
-        DatePickerControl.SelectedDate = DateTime.Today.AddDays(7); // default +7 days
+        DatePickerControl.SelectedDate = DateTime.Today.AddDays(7);
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e)
     {
-        if (DatePickerControl.SelectedDate == null)
+        // KINI ANG PINAKA-MODERNO NGA NULL CHECK
+        if (DatePickerControl.SelectedDate is not DateTime selectedDate)
         {
             MessageBox.Show("Pili og date.");
             return;
         }
 
-        SelectedDate = DatePickerControl.SelectedDate.Value;
+        SelectedDate = selectedDate;
         DialogResult = true;
         Close();
     }

@@ -21,6 +21,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="WPF-UI" Version="4.3.0" />
 	</ItemGroup>
 
 	<!-- Kini nga block maoy nag-ayo sa conflicts: tangtanga ang auto-import sa WinForms -->
