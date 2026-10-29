@@ -79,10 +79,25 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         RefreshClients();
     }
 
-    // ===== TASKS =====
+    // ===== TASKS & DASHBOARD =====
     private void Refresh()
     {
         using var db = new AppDbContext();
+
+        // --- UPDATE DASHBOARD STATS ---
+        var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+
+        var activeClients = db.Clients.Count(c => !c.IsDeleted && c.Status != ClientStatus.Closed);
+        var scheduledTasks = db.Tasks.Count(t => !t.IsDeleted && !t.IsCompleted && t.DueDate >= DateTime.Now);
+        var overdueTasks = db.Tasks.Count(t => !t.IsDeleted && !t.IsCompleted && t.DueDate < DateTime.Now);
+        var completedThisWeek = db.Tasks.Count(t => !t.IsDeleted && t.IsCompleted && t.CompletedAt >= startOfWeek);
+
+        ActiveClientsText.Text = activeClients.ToString();
+        ScheduledTasksText.Text = scheduledTasks.ToString();
+        OverdueTasksText.Text = overdueTasks.ToString();
+        CompletedThisWeekText.Text = completedThisWeek.ToString();
+
+        // --- UPDATE TASKS GRID ---
         var query = db.Tasks.Include(t => t.Client).Where(t => !t.IsDeleted).AsQueryable();
 
         if (ShowCompletedCheck.IsChecked is not true)
@@ -99,11 +114,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         var tasks = query.OrderBy(t => t.IsCompleted).ThenBy(t => t.DueDate).ToList();
         TaskGrid.ItemsSource = tasks;
 
-        var allTasks = db.Tasks.Where(t => !t.IsDeleted).ToList();
-        var overdue = allTasks.Count(t => !t.IsCompleted && t.DueDate < DateTime.Now);
-        var today = allTasks.Count(t => !t.IsCompleted && t.DueDate.Date == DateTime.Today && t.DueDate >= DateTime.Now);
-        var completed = allTasks.Count(t => t.IsCompleted);
-        StatusText.Text = $"🔴 Overdue: {overdue}  |  🟡 Today: {today}  |  ✅ Done: {completed}";
+        // Gitangtang nako ang karaan nga StatusText update dinhi kay naa na sa Dashboard Cards.
     }
 
     private void TaskSearchBox_TextChanged(object sender, TextChangedEventArgs e) => Refresh();
@@ -199,7 +210,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 var dlg = new ClientDialog(client) { Owner = this };
                 if (dlg.ShowDialog() is true)
                 {
-                    // KUNG NAG-USAB ANG STATUS, I-LOG ANG REASON UG TIMESTAMP
                     if (oldStatus != dlg.UpdatedStatus)
                     {
                         string reasonLog = string.IsNullOrWhiteSpace(dlg.UpdatedReason) ? "No reason provided." : dlg.UpdatedReason;
@@ -265,7 +275,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
-    // ===== MGA LAING METHODS (Parehas sa miaging code) =====
+    // ===== MGA LAING METHODS =====
     private void CopyPhone_Click(object sender, RoutedEventArgs e)
     {
         if (TaskGrid.SelectedItem is TaskItem task && task.Client is not null)
